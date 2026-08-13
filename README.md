@@ -1,26 +1,45 @@
 # PacketSnitch
 
-**PacketSnitch** is a Python-based automated PCAP analyzer designed to help security analysts, blue teamers, and students quickly identify suspicious activity in network captures.
+**PacketSnitch** is a Python-based PCAP analyzer for quickly identifying suspicious ports and high-volume source IPs in a network capture.
 
-It uses `scapy` to parse packets, detect abnormal behavior (like port scans and malicious ports), and flag top talkers.
+## Features
 
----
+- Parses TCP and UDP traffic from `.pcap` files
+- Reports the five source IPs with the highest packet counts
+- Flags source IPs communicating over ports `23`, `2323`, `4444`, `6666`, or `31337`
+- Accepts a capture path from the command line
 
-## 🚀 Features
-
-- Parses `.pcap` files and flags:
-  - Use of suspicious ports (e.g., 4444, 31337, telnet)
-  - High-volume IP communication
-- Shows top 5 IPs by traffic volume
-- Flags IPs communicating on known malicious ports
-- Easy to expand and customize
-
----
-
-## 🧰 Requirements
+## Requirements
 
 - Python 3.8+
-- `scapy`  
-  Install it with:
-  ```bash
-  pip install scapy
+- Scapy
+
+Install the dependency:
+
+```bash
+python -m pip install scapy
+```
+
+## Usage
+
+Analyze the bundled sample capture:
+
+```bash
+python analyze_pcap.py
+```
+
+Analyze another capture:
+
+```bash
+python analyze_pcap.py /path/to/capture.pcap
+```
+
+If the supplied path does not exist, PacketSnitch exits with the path it could not find instead of producing a Scapy traceback.
+
+## Tests
+
+Run the regression tests without requiring a live capture:
+
+```bash
+python -m unittest -v
+```
