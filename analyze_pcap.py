@@ -13,27 +13,43 @@ DEFAULT_PCAP = Path(__file__).with_name("example.pcap.cap")
 def analyze_pcap(pcap_file):
     packets = rdpcap(str(pcap_file))
     ip_count = defaultdict(int)
-    flagged = set()
+    flagged_flows = set()
 
     for pkt in packets:
         if IP in pkt:
-            ip = pkt[IP].src
-            ip_count[ip] += 1
+            ip_layer = pkt[IP]
+            ip_count[ip_layer.src] += 1
 
-            if TCP in pkt or UDP in pkt:
-                sport = pkt.sport
-                dport = pkt.dport
+            if TCP in pkt:
+                protocol = "TCP"
+                transport_layer = pkt[TCP]
+            elif UDP in pkt:
+                protocol = "UDP"
+                transport_layer = pkt[UDP]
+            else:
+                continue
 
-                if dport in SUSPICIOUS_PORTS or sport in SUSPICIOUS_PORTS:
-                    flagged.add(ip)
+            if (
+                transport_layer.dport in SUSPICIOUS_PORTS
+                or transport_layer.sport in SUSPICIOUS_PORTS
+            ):
+                flagged_flows.add(
+                    (
+                        protocol,
+                        ip_layer.src,
+                        transport_layer.sport,
+                        ip_layer.dst,
+                        transport_layer.dport,
+                    )
+                )
 
     print("\n[+] IPs communicating the most:")
     for ip, count in sorted(ip_count.items(), key=lambda item: item[1], reverse=True)[:5]:
         print(f"   {ip}: {count} packets")
 
-    print("\n[!] IPs using suspicious ports:")
-    for ip in sorted(flagged):
-        print(f"   {ip}")
+    print("\n[!] Flows using monitored ports:")
+    for protocol, source, sport, destination, dport in sorted(flagged_flows):
+        print(f"   {protocol} {source}:{sport} -> {destination}:{dport}")
 
 
 def parse_args(argv=None):
